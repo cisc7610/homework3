@@ -132,17 +132,17 @@ There are three different frameworks that you can use for querying MongoDB colle
 
 #### Single-purpose aggregation operations
 
-These operations are very simple, but not very flexible.  Useful operations for the purposes of this assignment are [`db.collection.count()`](https://docs.mongodb.com/manual/reference/method/db.collection.count/#db.collection.count), which counts the number of documents in a collection, and [`db.collection.distinct()`](https://docs.mongodb.com/manual/reference/method/db.collection.distinct/#db.collection.distinct), which identifies the distinct elements in a given field. These functions that are [discussed](https://docs.mongodb.com/manual/aggregation/#single-purpose-aggregation-operations) in the official documentation.
+These operations are very simple, but not very flexible.  Useful operations for the purposes of this assignment are [`db.collection.count()`](https://docs.mongodb.com/manual/reference/method/db.collection.count/#db.collection.count), which counts the number of documents in a collection, and [`db.collection.distinct()`](https://docs.mongodb.com/manual/reference/method/db.collection.distinct/#db.collection.distinct), which identifies the distinct elements in a given field. These functions that are [discussed](https://docs.mongodb.com/manual/aggregation/#single-purpose-aggregation-operations) in the official documentation.  These are called directly in python on the `collection` object.
 
-Note that `distinct()` takes as its argument the name of a field to search for unique values in each document in the collection.  Dots in this name are interpreted as nested fields, so in `example.json` you could refer to the field `"response.labelAnnotations.score"` to search through all of the `score` fields in the `labelAnnotations` array.
+Note that `distinct()` takes as its argument the name of a field to analyze for unique values in each document in the collection.  Dots in this name are interpreted as nested fields, so in `example.json` you could refer to the field `"response.labelAnnotations.mid"` to find all of the unique values of the `mid` fields in the `labelAnnotations` array in all documents.  This [field path syntax](https://docs.mongodb.com/manual/meta/aggregation-quick-reference/#field-path-and-system-variables) also applies to the operators in the aggregation pipeline.
 
 #### Aggregation pipeline
 
-Queries using the aggregation pipeline are moderately easy to write and provide a good amount of flexibility.  They are constructed using a sequence of *stages*, where each stage modifies or filters the set of documents as they "flow" through the pipeline.  See the documentation [here](https://docs.mongodb.com/manual/meta/aggregation-quick-reference/).  Useful stages include (note that in MongoDB syntax, operator names are prefixed with the dollar sign character):
+Queries using the aggregation pipeline are moderately easy to write and provide a good amount of flexibility.  They are constructed using a sequence of *stages*, where each stage modifies or filters the set of documents as they "flow" through the pipeline.  See the documentation [here](https://docs.mongodb.com/manual/meta/aggregation-quick-reference/) for a full list of stages.  Note that in MongoDB syntax, stage and operator names are prefixed with the dollar sign character.  Useful stages include:
 
-| Operator | Operation |
+| Stage | Operation |
 | ------- | ---- |
-| [`$unwind`](https://docs.mongodb.com/manual/reference/operator/aggregation/unwind/#pipe._S_unwind] | Create a separate document for each value in an array with all other fields the same as the original document |
+| [`$unwind`](https://docs.mongodb.com/manual/reference/operator/aggregation/unwind/#pipe._S_unwind) | Create a separate document for each value in a nested array with all other fields the same as the original document |
 | [`$project`](https://docs.mongodb.com/manual/reference/operator/aggregation/project/#pipe._S_project) | Select a subset of fields from documents (also useful for renaming fields) |
 | [`$match`](https://docs.mongodb.com/manual/reference/operator/aggregation/match/#pipe._S_match) | Keep only documents matching provided criteria |
 | [`$group`](https://docs.mongodb.com/manual/reference/operator/aggregation/group/#pipe._S_group) | Aggregate documents on a field and summarize entries in other fields |
@@ -153,9 +153,9 @@ Note that there are some slight differences between the pure JavaScript syntax o
 
 #### Map-reduce framework
 
-The most complex, but most flexible query framework for MongoDB is the map-reduce framework.  As discussed in [lecture 02b](http://m.mr-pc.org/t/cisc7610/2018fa/lecture02b.pdf) starting on slide 7, map-reduce consists of four stages, although you only need to write two of them: a mapper and a reducer.  In the context of `pymongo`, you write these as two JavaScript functions as strings within `bson.code.Code` objects.  See the documentation [here](https://api.mongodb.com/python/2.0/examples/map_reduce.html).
+The most complex, but most flexible query framework for MongoDB is the map-reduce framework.  As discussed in [lecture 02b](http://m.mr-pc.org/t/cisc7610/2018fa/lecture02b.pdf) starting on slide 7, map-reduce consists of four stages, although you only need to write two of them: a mapper and a reducer.  In the context of `pymongo`, you write these as two JavaScript functions within strings within `bson.code.Code` objects.  See the documentation [here](https://api.mongodb.com/python/2.0/examples/map_reduce.html).
 
-The important points are that the map JavaScript function takes no arguments, but extracts data from the `this` object.  It then uses the `emit(k,v)` function to emit whatever key-value pairs it wants to extract from the `this` object.  The reduce JavaScript function takes two arguments: a key and an array of values and returns a single value that will be associated with that key in the output.
+The important points are that the map JavaScript function takes no arguments, but extracts data from the `this` object.  It then uses the `emit(k,v)` function to emit as many key-value pairs as it wants to extract from each `this` object.  The reduce JavaScript function takes two arguments: a key and an array of values and summarizes this array into a single return value that will be associated with that key in the overall output.
 
 Debugging these queries is rather cumbersome, but there is documentation for [troubleshooting the map function](https://docs.mongodb.com/manual/tutorial/troubleshoot-map-function/) and [troubleshooting the reduce function](https://docs.mongodb.com/manual/tutorial/troubleshoot-reduce-function/) in the official documentation.  These are part of the complete [Map-Reduce documentation](https://docs.mongodb.com/manual/core/map-reduce/) which might also be useful.
 
